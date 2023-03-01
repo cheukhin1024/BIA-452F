@@ -20,6 +20,6 @@ dat %>% select(name, nationality, sport,
   reshape2::melt(id="name") %>%
   ggplot(aes(x=variable, y=value, fill=variable))  + 
   geom_boxplot() +
-  labs(x="nationality", y="earnings", 
+  labs(x="Characteristics", y="Value", 
        title="Earnings in different countries") +
-  theme(plot.title=element_text(hjust=1.0))
+  theme(plot.title=element_text(hjust=0.5))
