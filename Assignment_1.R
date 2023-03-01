@@ -1,0 +1,13 @@
+library(dplyr)
+library(ggplot2)
+library(psych)
+library(corrplot)
+library(VIM)
+library(gridExtra)
+library(car)
+library(knitr)
+library(gmodels)
+library(readxl)
+
+dat <- read_csv("C:/Users/s1224442/Downloads/Forbes Richest Atheletes (1990-2020).csv")
+describe(dat[,1:5])
