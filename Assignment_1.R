@@ -13,6 +13,7 @@ library(readr)
 library(reshape2)
 library(tidyverse)
 library(r2r)
+library(ltm)
 
 ### Descriptive statistics
 
@@ -70,6 +71,13 @@ aggr(dat, prop=TRUE, numbers=FALSE)
 
 matrixplot(dat, interactive=FALSE) # without sorting
 dat_comp <- dat[complete.cases(dat),]
+
+"""
+## Kruskal-Wallis test is usesd because there are some categorical variables and they are not dichotomous.
+
+set.seed(123)
+kruskal.test(x~y)
+"""
 
 ## Convert string english character factors into integers
 
@@ -145,3 +153,38 @@ dat_comp %>% select(nationality, sport, earnings, current_rank) %>%
 ### Hypothesis and evaluation
 
 dat_comp %>% select(nationality, sport, earnings, current_rank) %>% sapply(quantile)
+
+dat_new <- dat_comp %>% mutate(p_group=ifelse(nationality>=22, "High", 
+                                              ifelse(nationality<22 & nationality>=20, "Medium", "Low")),
+                               pf_group=ifelse(sport>=10, "High", 
+                                               ifelse(sport<10 & sport>5, "Medium", "Low")),
+                               e_group=ifelse(earnings>=59.4, "High", 
+                                               ifelse(earnings<59.4 & earnings>24.0, "Medium", "Low")),
+                               b_group=ifelse(current_rank>=8, "High", 
+                                              ifelse(current_rank<=8 & current_rank>3, "Medium", "Low")))
+
+# reorder the levels
+dat_new$p_group <- factor(dat_new$p_group, levels=c("High", "Medium", "Low"))
+dat_new$pf_group <- factor(dat_new$pf_group, levels=c("High", "Medium", "Low"))
+dat_new$e_group <- factor(dat_new$e_group, levels=c("High", "Medium", "Low"))
+dat_new$b_group <- factor(dat_new$b_group, levels=c("High", "Medium", "Low"))
+
+## count the # for each group
+
+## nationality:
+cat("nationality:")
+table(dat_new$p_group)
+
+## sport:
+cat("sport:")
+table(dat_new$pf_group)
+
+## earnings:
+cat("earnings:")
+table(dat_new$e_group)
+
+## current_rank:
+cat("current_rank:")
+table(dat_new$b_group)
+
+### H1 - installment and installment frequency
