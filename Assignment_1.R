@@ -19,6 +19,10 @@ library(r2r)
 dat <- read_csv("C:/Users/Administrator/Downloads/Forbes Richest Atheletes (1990-2020).csv")
 describe(dat[,1:5])
 
+## Fixing the raw data input error
+dat$sport[which(dat$sport=="ice hockey")] <- "Ice Hockey"
+
+
 dat <- dat %>% select(name, nationality, sport, earnings, current_rank)
 
 ## First boxplot by group to study the relationship between 'nationality' and 'earnings'
@@ -41,10 +45,10 @@ dat %>% select(name, nationality, sport,
        title="Earnings in different sports") +
   theme(plot.title=element_text(hjust=0.5))
   
-## Second boxplot by group to study the relationship between 'sport' and 'earnings'
+## Third boxplot by group to study the relationship between 'sport' and 'earnings'
 dat %>% select(name, nationality, sport, 
                 earnings, current_rank) %>%
-  ggplot(data = dat, mapping = aes(x = sport, y = earnings))+ 
+  ggplot(data = dat, mapping = aes(x = current_rank, y = earnings))+ 
   geom_point() + geom_smooth(method="gam") +
   scale_x_discrete(guide = guide_axis(n.dodge=3))
   labs(x="Characteristics", y="Value", 
@@ -108,22 +112,19 @@ dat$sport[which(dat$sport=="F1 Motorsports")] <- "8"
 dat$sport[which(dat$sport=="F1 racing")] <- "9"
 dat$sport[which(dat$sport=="Golf")] <- "10"
 dat$sport[which(dat$sport=="Hockey")] <- "11"
-dat$sport[which(dat$sport=="ice hockey")] <- "12"
-dat$sport[which(dat$sport=="")] <- "13"
-dat$sport[which(dat$sport=="Northern Ireland")] <- "14"
-dat$sport[which(dat$sport=="Philippines")] <- "15"
-dat$sport[which(dat$sport=="Portugal")] <- "16"
-dat$sport[which(dat$sport=="Russia")] <- "17"
-dat$sport[which(dat$sport=="Serbia")] <- "18"
-dat$sport[which(dat$sport=="Spain")] <- "19"
-dat$sport[which(dat$sport=="Switzerland")] <- "20"
-dat$sport[which(dat$sport=="UK")] <- "21"
-dat$sport[which(dat$sport=="USA")] <- "22"
+dat$sport[which(dat$sport=="Ice Hockey")] <- "12"
+dat$sport[which(dat$sport=="MMA")] <- "13"
+dat$sport[which(dat$sport=="motorcycle gp")] <- "14"
+dat$sport[which(dat$sport=="NASCAR")] <- "15"
+dat$sport[which(dat$sport=="NBA")] <- "16"
+dat$sport[which(dat$sport=="NFL")] <- "17"
+dat$sport[which(dat$sport=="Soccer")] <- "18"
+dat$sport[which(dat$sport=="Tennis")] <- "19"
 dat$sport <- as.numeric(dat$sport)
 
-## Correlation analysis
-dat_comp %>% 
-  select(name, nationality, sport, 
+## Correlation analysis: Heat Map
+dat %>% 
+  select(nationality, sport, 
          earnings, current_rank) %>%
   cor() %>%
   round(3) %>%
@@ -131,3 +132,14 @@ dat_comp %>%
            title="Correlation Matrix Among Factors",
            mar=c(0,0,2,0),
            tl.cex=0.5, number.cex = 0.4)
+
+## Scatter plot between related variables
+x<-dat %>% select(nationality, sport, 
+                       earnings, current_rank) %>%
+  cor() 
+  round(x,3)
+  
+dat %>% select(nationality, sport, earnings, current_rank) %>%
+  scatterplotMatrix()
+
+## Hypothesis and evaluation
