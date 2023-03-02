@@ -217,3 +217,48 @@ x<-dat_new %>% select(earnings, b_group) %>%
 
 # use kable because x is a tibble 
 kable(x)
+
+
+g1 <- dat_new %>% select(earnings, p_group) %>% 
+  reshape2::melt(id="p_group") %>%
+  ggplot(aes(x=p_group, y=value, fill=variable))  + 
+  geom_boxplot() +
+  labs(x="nationality", y="earnings", 
+       title="earnings vs nationality") +
+  theme(plot.title=element_text(hjust=0.5), legend.position="None") 
+
+g2 <- dat_new %>% select(earnings, pf_group) %>% 
+  reshape2::melt(id="pf_group") %>%
+  ggplot(aes(x=pf_group, y=value, fill=variable))  + 
+  geom_boxplot() +
+  labs(x="sport", y="earnings", 
+       title="earnings vs sport") +
+  theme(plot.title=element_text(hjust=0.5), legend.position="None") 
+
+g3 <- dat_new %>% select(earnings, b_group) %>% 
+  reshape2::melt(id="b_group") %>%
+  ggplot(aes(x=b_group, y=value, fill=variable))  + 
+  geom_boxplot() +
+  labs(x="current_rank", y="earnings", 
+       title="earnings vs current_rank") +
+  theme(plot.title=element_text(hjust=0.5), legend.position="None") 
+
+grid.arrange(arrangeGrob(g1, g2,g3, nrow=3))
+
+# earnings group by nationality, sport and current_rank
+x<- dat_new %>% select(earnings, p_group, pf_group, e_group) %>%
+  group_by(p_group, pf_group, e_group) %>%
+  summarise(Av_install=round(mean(earnings),3), 
+            SD_install=round(sd(earnings),3),
+            Median_install=round(median(earnings),3))
+
+kable(x)
+
+CrossTable(dat_new$p_group, dat_new$pf_group,
+           prop.chisq=FALSE, dnn=c("nationality", "sport"))
+
+CrossTable(dat_new$e_group, dat_new$pf_group,
+           prop.chisq=FALSE, dnn=c("current_rank", "sport"))
+
+CrossTable(dat_new$p_group, dat_new$e_group,
+           prop.chisq=FALSE, dnn=c("nationality", "current_rank"))
