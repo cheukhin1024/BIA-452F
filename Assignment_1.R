@@ -24,7 +24,7 @@ describe(dat[,1:5])
 dat$sport[which(dat$sport=="ice hockey")] <- "Ice Hockey"
 
 
-dat <- dat %>% select(name, nationality, sport, earnings, current_rank)
+dat <- dat %>% dplyr::select(name, nationality, sport, earnings, current_rank)
 
 ## First boxplot by group to study the relationship between 'nationality' and 'earnings'
 dat %>% select(name, nationality, sport, 
@@ -72,12 +72,10 @@ aggr(dat, prop=TRUE, numbers=FALSE)
 matrixplot(dat, interactive=FALSE) # without sorting
 dat_comp <- dat[complete.cases(dat),]
 
-"""
 ## Kruskal-Wallis test is usesd because there are some categorical variables and they are not dichotomous.
 
-set.seed(123)
-kruskal.test(x~y)
-"""
+#set.seed(123)
+#kruskal.test(x~y)
 
 ## Convert string english character factors into integers
 
@@ -132,7 +130,7 @@ dat_comp$sport <- as.numeric(dat_comp$sport)
 
 ## Correlation analysis: Heat Map
 dat_comp %>% 
-  select(nationality, sport, 
+  dplyr::select(nationality, sport, 
          earnings, current_rank) %>%
   cor() %>%
   round(3) %>%
@@ -142,17 +140,17 @@ dat_comp %>%
            tl.cex=0.5, number.cex = 0.4)
 
 ## Scatter plot between related variables
-x<-dat_comp %>% select(nationality, sport, 
+x<-dat_comp %>% dplyr::select(nationality, sport, 
                        earnings, current_rank) %>%
   cor() 
   round(x,3)
   
-dat_comp %>% select(nationality, sport, earnings, current_rank) %>%
+dat_comp %>% dplyr::select(nationality, sport, earnings, current_rank) %>%
   scatterplotMatrix()
 
 ### Hypothesis and evaluation
 
-dat_comp %>% select(nationality, sport, earnings, current_rank) %>% sapply(quantile)
+dat_comp %>% dplyr::select(nationality, sport, earnings, current_rank) %>% sapply(quantile)
 
 dat_new <- dat_comp %>% mutate(p_group=ifelse(nationality>=22, "High", 
                                               ifelse(nationality<22 & nationality>=20, "Medium", "Low")),
@@ -189,7 +187,7 @@ table(dat_new$b_group)
 
 ### H1 - earnings
 # earnings group by nationality
-x<-dat_new %>% select(earnings, p_group) %>%
+x<-dat_new %>% dplyr::select(earnings, p_group) %>%
   group_by(p_group) %>%
   summarise(Av_install=round(mean(earnings),3), 
             SD_install=round(sd(earnings),3),
@@ -199,7 +197,7 @@ x<-dat_new %>% select(earnings, p_group) %>%
 kable(x)
 
 # earnings group by sport
-x<-dat_new %>% select(earnings, pf_group) %>%
+x<-dat_new %>% dplyr::select(earnings, pf_group) %>%
   group_by(pf_group) %>%
   summarise(Av_install=round(mean(earnings),3), 
             SD_install=round(sd(earnings),3),
@@ -209,7 +207,7 @@ x<-dat_new %>% select(earnings, pf_group) %>%
 kable(x)
 
 # earnings group by current_rank
-x<-dat_new %>% select(earnings, b_group) %>%
+x<-dat_new %>% dplyr::select(earnings, b_group) %>%
   group_by(b_group) %>%
   summarise(Av_install=round(mean(earnings),3), 
             SD_install=round(sd(earnings),3),
@@ -219,7 +217,7 @@ x<-dat_new %>% select(earnings, b_group) %>%
 kable(x)
 
 
-g1 <- dat_new %>% select(earnings, p_group) %>% 
+g1 <- dat_new %>% dplyr::select(earnings, p_group) %>% 
   reshape2::melt(id="p_group") %>%
   ggplot(aes(x=p_group, y=value, fill=variable))  + 
   geom_boxplot() +
@@ -227,7 +225,7 @@ g1 <- dat_new %>% select(earnings, p_group) %>%
        title="earnings vs nationality") +
   theme(plot.title=element_text(hjust=0.5), legend.position="None") 
 
-g2 <- dat_new %>% select(earnings, pf_group) %>% 
+g2 <- dat_new %>% dplyr::select(earnings, pf_group) %>% 
   reshape2::melt(id="pf_group") %>%
   ggplot(aes(x=pf_group, y=value, fill=variable))  + 
   geom_boxplot() +
@@ -235,7 +233,7 @@ g2 <- dat_new %>% select(earnings, pf_group) %>%
        title="earnings vs sport") +
   theme(plot.title=element_text(hjust=0.5), legend.position="None") 
 
-g3 <- dat_new %>% select(earnings, b_group) %>% 
+g3 <- dat_new %>% dplyr::select(earnings, b_group) %>% 
   reshape2::melt(id="b_group") %>%
   ggplot(aes(x=b_group, y=value, fill=variable))  + 
   geom_boxplot() +
@@ -246,7 +244,7 @@ g3 <- dat_new %>% select(earnings, b_group) %>%
 grid.arrange(arrangeGrob(g1, g2,g3, nrow=3))
 
 # earnings group by nationality, sport and current_rank
-x<- dat_new %>% select(earnings, p_group, pf_group, e_group) %>%
+x<- dat_new %>% dplyr::select(earnings, p_group, pf_group, e_group) %>%
   group_by(p_group, pf_group, e_group) %>%
   summarise(Av_install=round(mean(earnings),3), 
             SD_install=round(sd(earnings),3),
@@ -262,3 +260,27 @@ CrossTable(dat_new$e_group, dat_new$pf_group,
 
 CrossTable(dat_new$p_group, dat_new$e_group,
            prop.chisq=FALSE, dnn=c("nationality", "current_rank"))
+
+# create combine group for boxplot
+x<- dat_new %>% dplyr::select(earnings, p_group, pf_group, e_group) %>% 
+  reshape2::melt(id=c("p_group", "pf_group", "e_group")) %>%
+  mutate(c_group=ifelse(p_group=="High", 
+                        ifelse(pf_group=="High", "High-High", 
+                               ifelse(pf_group=="Medium", "High-Medium", "High-Low")),
+                        ifelse(p_group=="Medium", 
+                               ifelse(pf_group=="High", "Medium-High", 
+                                      ifelse(pf_group=="Medium", "Medium-Medium", "Medium-Low")),
+                               ifelse(pf_group=="High", "Low-High", 
+                                      ifelse(pf_group=="Medium", "Low-Medium", "Low-Low")))))
+
+x$c_group <- factor(x$c_group, levels=c("High-High", "High-Medium", "High-Low",
+                                        "Medium-High", "Medium-Medium","Medium-Low",
+                                        "Low-High", "Low-Medium", "Low-Low"))
+
+x %>% filter(variable=="Installment") %>%
+  ggplot(aes(x=c_group, y=value, fill=variable))  + 
+  geom_boxplot() +
+  labs(x="Purchase + Purchase Frequency", y="Installment", 
+       title="Installment vs Purchase + Purchase Frequency") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title=element_text(hjust=0.5), legend.position="None") 
