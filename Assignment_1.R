@@ -187,4 +187,33 @@ table(dat_new$e_group)
 cat("current_rank:")
 table(dat_new$b_group)
 
-### H1 - installment and installment frequency
+### H1 - earnings
+# earnings group by nationality
+x<-dat_new %>% select(earnings, p_group) %>%
+  group_by(p_group) %>%
+  summarise(Av_install=round(mean(earnings),3), 
+            SD_install=round(sd(earnings),3),
+            Median_install=round(median(earnings),3))
+
+# use kable because x is a tibble 
+kable(x)
+
+# earnings group by sport
+x<-dat_new %>% select(earnings, pf_group) %>%
+  group_by(pf_group) %>%
+  summarise(Av_install=round(mean(earnings),3), 
+            SD_install=round(sd(earnings),3),
+            Median_install=round(median(earnings),3))
+
+# use kable because x is a tibble 
+kable(x)
+
+# earnings group by current_rank
+x<-dat_new %>% select(earnings, b_group) %>%
+  group_by(b_group) %>%
+  summarise(Av_install=round(mean(earnings),3), 
+            SD_install=round(sd(earnings),3),
+            Median_install=round(median(earnings),3))
+
+# use kable because x is a tibble 
+kable(x)
