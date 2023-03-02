@@ -74,56 +74,56 @@ dat_comp <- dat[complete.cases(dat),]
 ## Convert string english character factors into integers
 
 # Convert 'nationality' character strings into integers
-dat$nationality <- as.character(dat$nationality)
-dat$nationality[which(dat$nationality=="Argentina")] <- "1"
-dat$nationality[which(dat$nationality=="Australia")] <- "2"
-dat$nationality[which(dat$nationality=="Austria")] <- "3"
-dat$nationality[which(dat$nationality=="Brazil")] <- "4"
-dat$nationality[which(dat$nationality=="Canada")] <- "5"
-dat$nationality[which(dat$nationality=="Dominican")] <- "6"
-dat$nationality[which(dat$nationality=="Filipino")] <- "7"
-dat$nationality[which(dat$nationality=="Finland")] <- "8"
-dat$nationality[which(dat$nationality=="France")] <- "9"
-dat$nationality[which(dat$nationality=="Germany")] <- "10"
-dat$nationality[which(dat$nationality=="Ireland")] <- "11"
-dat$nationality[which(dat$nationality=="Italy")] <- "12"
-dat$nationality[which(dat$nationality=="Mexico")] <- "13"
-dat$nationality[which(dat$nationality=="Northern Ireland")] <- "14"
-dat$nationality[which(dat$nationality=="Philippines")] <- "15"
-dat$nationality[which(dat$nationality=="Portugal")] <- "16"
-dat$nationality[which(dat$nationality=="Russia")] <- "17"
-dat$nationality[which(dat$nationality=="Serbia")] <- "18"
-dat$nationality[which(dat$nationality=="Spain")] <- "19"
-dat$nationality[which(dat$nationality=="Switzerland")] <- "20"
-dat$nationality[which(dat$nationality=="UK")] <- "21"
-dat$nationality[which(dat$nationality=="USA")] <- "22"
-dat$nationality <- as.numeric(dat$nationality)
+dat_comp$nationality <- as.character(dat_comp$nationality)
+dat_comp$nationality[which(dat_comp$nationality=="Argentina")] <- "1"
+dat_comp$nationality[which(dat_comp$nationality=="Australia")] <- "2"
+dat_comp$nationality[which(dat_comp$nationality=="Austria")] <- "3"
+dat_comp$nationality[which(dat_comp$nationality=="Brazil")] <- "4"
+dat_comp$nationality[which(dat_comp$nationality=="Canada")] <- "5"
+dat_comp$nationality[which(dat_comp$nationality=="Dominican")] <- "6"
+dat_comp$nationality[which(dat_comp$nationality=="Filipino")] <- "7"
+dat_comp$nationality[which(dat_comp$nationality=="Finland")] <- "8"
+dat_comp$nationality[which(dat_comp$nationality=="France")] <- "9"
+dat_comp$nationality[which(dat_comp$nationality=="Germany")] <- "10"
+dat_comp$nationality[which(dat_comp$nationality=="Ireland")] <- "11"
+dat_comp$nationality[which(dat_comp$nationality=="Italy")] <- "12"
+dat_comp$nationality[which(dat_comp$nationality=="Mexico")] <- "13"
+dat_comp$nationality[which(dat_comp$nationality=="Northern Ireland")] <- "14"
+dat_comp$nationality[which(dat_comp$nationality=="Philippines")] <- "15"
+dat_comp$nationality[which(dat_comp$nationality=="Portugal")] <- "16"
+dat_comp$nationality[which(dat_comp$nationality=="Russia")] <- "17"
+dat_comp$nationality[which(dat_comp$nationality=="Serbia")] <- "18"
+dat_comp$nationality[which(dat_comp$nationality=="Spain")] <- "19"
+dat_comp$nationality[which(dat_comp$nationality=="Switzerland")] <- "20"
+dat_comp$nationality[which(dat_comp$nationality=="UK")] <- "21"
+dat_comp$nationality[which(dat_comp$nationality=="USA")] <- "22"
+dat_comp$nationality <- as.numeric(dat_comp$nationality)
 
 # Convert 'sport' character strings into integers
-dat$sport <- as.character(dat$sport)
-dat$sport[which(dat$sport=="American Football")] <- "1"
-dat$sport[which(dat$sport=="American Football / Baseball")] <- "2"
-dat$sport[which(dat$sport=="Auto Racing")] <- "3"
-dat$sport[which(dat$sport=="Baseball")] <- "4"
-dat$sport[which(dat$sport=="Basketball")] <- "5"
-dat$sport[which(dat$sport=="Boxing")] <- "6"
-dat$sport[which(dat$sport=="Cycling")] <- "7"
-dat$sport[which(dat$sport=="F1 Motorsports")] <- "8"
-dat$sport[which(dat$sport=="F1 racing")] <- "9"
-dat$sport[which(dat$sport=="Golf")] <- "10"
-dat$sport[which(dat$sport=="Hockey")] <- "11"
-dat$sport[which(dat$sport=="Ice Hockey")] <- "12"
-dat$sport[which(dat$sport=="MMA")] <- "13"
-dat$sport[which(dat$sport=="motorcycle gp")] <- "14"
-dat$sport[which(dat$sport=="NASCAR")] <- "15"
-dat$sport[which(dat$sport=="NBA")] <- "16"
-dat$sport[which(dat$sport=="NFL")] <- "17"
-dat$sport[which(dat$sport=="Soccer")] <- "18"
-dat$sport[which(dat$sport=="Tennis")] <- "19"
-dat$sport <- as.numeric(dat$sport)
+dat_comp$sport <- as.character(dat_comp$sport)
+dat_comp$sport[which(dat_comp$sport=="American Football")] <- "1"
+dat_comp$sport[which(dat_comp$sport=="American Football / Baseball")] <- "2"
+dat_comp$sport[which(dat_comp$sport=="Auto Racing")] <- "3"
+dat_comp$sport[which(dat_comp$sport=="Baseball")] <- "4"
+dat_comp$sport[which(dat_comp$sport=="Basketball")] <- "5"
+dat_comp$sport[which(dat_comp$sport=="Boxing")] <- "6"
+dat_comp$sport[which(dat_comp$sport=="Cycling")] <- "7"
+dat_comp$sport[which(dat_comp$sport=="F1 Motorsports")] <- "8"
+dat_comp$sport[which(dat_comp$sport=="F1 racing")] <- "9"
+dat_comp$sport[which(dat_comp$sport=="Golf")] <- "10"
+dat_comp$sport[which(dat_comp$sport=="Hockey")] <- "11"
+dat_comp$sport[which(dat_comp$sport=="Ice Hockey")] <- "12"
+dat_comp$sport[which(dat_comp$sport=="MMA")] <- "13"
+dat_comp$sport[which(dat_comp$sport=="motorcycle gp")] <- "14"
+dat_comp$sport[which(dat_comp$sport=="NASCAR")] <- "15"
+dat_comp$sport[which(dat_comp$sport=="NBA")] <- "16"
+dat_comp$sport[which(dat_comp$sport=="NFL")] <- "17"
+dat_comp$sport[which(dat_comp$sport=="Soccer")] <- "18"
+dat_comp$sport[which(dat_comp$sport=="Tennis")] <- "19"
+dat_comp$sport <- as.numeric(dat_comp$sport)
 
 ## Correlation analysis: Heat Map
-dat %>% 
+dat_comp %>% 
   select(nationality, sport, 
          earnings, current_rank) %>%
   cor() %>%
@@ -134,12 +134,14 @@ dat %>%
            tl.cex=0.5, number.cex = 0.4)
 
 ## Scatter plot between related variables
-x<-dat %>% select(nationality, sport, 
+x<-dat_comp %>% select(nationality, sport, 
                        earnings, current_rank) %>%
   cor() 
   round(x,3)
   
-dat %>% select(nationality, sport, earnings, current_rank) %>%
+dat_comp %>% select(nationality, sport, earnings, current_rank) %>%
   scatterplotMatrix()
 
-## Hypothesis and evaluation
+### Hypothesis and evaluation
+
+dat_comp %>% select(nationality, sport, earnings, current_rank) %>% sapply(quantile)
