@@ -1,0 +1,568 @@
+> #Sys.setenv(LANG = "en")
+> library(dplyr)
+> library(ggplot2)
+> library(psych)
+> library(corrplot)
+> library(VIM)
+> library(gridExtra)
+> library(car)
+> library(knitr)
+> library(gmodels)
+> library(readxl)
+> library(readr)
+> library(reshape2)
+> library(tidyverse)
+> library(r2r)
+> library(ltm)
+> 
+> ### Descriptive statistics
+> 
+> dat <- read_csv("C:/Users/s1224442/Downloads/Forbes Richest Atheletes (1990-2020).csv")
+Parsed with column specification:
+cols(
+  name = col_character(),
+  nationality = col_character(),
+  sport = col_character(),
+  earnings = col_double(),
+  current_rank = col_double(),
+  year = col_double(),
+  previous_year_rank = col_character()
+)
+> describe(dat[,1:5])
+             vars   n  mean    sd median trimmed   mad min  max
+name*           1 301   NaN    NA     NA     NaN    NA Inf -Inf
+nationality*    2 301   NaN    NA     NA     NaN    NA Inf -Inf
+sport*          3 301   NaN    NA     NA     NaN    NA Inf -Inf
+earnings        4 301 45.52 33.53     39   41.32 23.72 8.1  300
+current_rank    5 301  5.45  2.85      5    5.46  4.45 1.0   10
+             range skew kurtosis   se
+name*         -Inf   NA       NA   NA
+nationality*  -Inf   NA       NA   NA
+sport*        -Inf   NA       NA   NA
+earnings     291.9 3.07    18.15 1.93
+current_rank   9.0 0.00    -1.24 0.16
+Warning messages:
+1: In describe(dat[, 1:5]) : NAs introduced by coercion
+2: In describe(dat[, 1:5]) : NAs introduced by coercion
+3: In describe(dat[, 1:5]) : NAs introduced by coercion
+4: In FUN(newX[, i], ...) : no non-missing arguments to min; returning Inf
+5: In FUN(newX[, i], ...) : no non-missing arguments to min; returning Inf
+6: In FUN(newX[, i], ...) : no non-missing arguments to min; returning Inf
+7: In FUN(newX[, i], ...) :
+  no non-missing arguments to max; returning -Inf
+8: In FUN(newX[, i], ...) :
+  no non-missing arguments to max; returning -Inf
+9: In FUN(newX[, i], ...) :
+  no non-missing arguments to max; returning -Inf
+> 
+> ## Fixing the raw data input error
+> dat$sport[which(dat$sport=="ice hockey")] <- "Ice Hockey"
+> 
+> 
+> dat <- dat %>% dplyr::select(name, nationality, sport, earnings, current_rank)
+> 
+> ## First boxplot by group to study the relationship between 'nationality' and 'earnings'
+> dat %>% dplyr::select(name, nationality, sport, 
++                earnings, current_rank) %>%
++   ggplot(data = dat, mapping = aes(x = nationality, y = earnings))+ 
++   geom_point() +
++   scale_x_discrete(guide = guide_axis(n.dodge=3))
+> labs(x="Characteristics", y="Value", 
++      title="Earnings in different nationalities") +
++   theme(plot.title=element_text(hjust=0.5))
+NULL
+> 
+> ## Second boxplot by group to study the relationship between 'sport' and 'earnings'
+> dat %>% dplyr::select(name, nationality, sport, 
++                earnings, current_rank) %>%
++   ggplot(data = dat, mapping = aes(x = sport, y = earnings))+ 
++   geom_point() +
++   scale_x_discrete(guide = guide_axis(n.dodge=3))
+> labs(x="Characteristics", y="Value", 
++      title="Earnings in different sports") +
++   theme(plot.title=element_text(hjust=0.5))
+NULL
+> 
+> ## Third boxplot by group to study the relationship between 'sport' and 'earnings'
+> dat %>% dplyr::select(name, nationality, sport, 
++                earnings, current_rank) %>%
++   ggplot(data = dat, mapping = aes(x = current_rank, y = earnings))+ 
++   geom_point() +
++   scale_x_discrete(guide = guide_axis(n.dodge=3))
+> labs(x="Characteristics", y="Value", 
++      title="Earnings in current rankings") +
++   theme(plot.title=element_text(hjust=0.5))
+NULL
+> 
+> ### Missing data analysis
+> 
+> ## Missing by count
+> cat("Missing by count\n")
+Missing by count
+> sapply(dat[,1:5], function(x) round(sum(is.na(x)),2))
+        name  nationality        sport     earnings current_rank 
+           0            0            0            0            0 
+> 
+> ## Missing by percentage
+> cat("Missing by percentage\n")
+Missing by percentage
+> sapply(dat[,1:5], function(x) round(sum(is.na(x))/nrow(dat),2))
+        name  nationality        sport     earnings current_rank 
+           0            0            0            0            0 
+> 
+> aggr(dat, prop=FALSE, numbers=TRUE)
+> aggr(dat, prop=TRUE, numbers=FALSE)
+> 
+> matrixplot(dat, interactive=FALSE) # without sorting
+> dat_comp <- dat[complete.cases(dat),]
+> 
+> ## Kruskal-Wallis test is used because there are some categorical variables and they are not dichotomous.
+> 
+> #set.seed(123)
+> #kruskal.test(x~y)
+> 
+> ## Convert string english character factors into integers
+> 
+> # Convert 'nationality' character strings into integers
+> dat_comp$nationality <- as.character(dat_comp$nationality)
+> dat_comp$nationality[which(dat_comp$nationality=="Argentina")] <- "1"
+> dat_comp$nationality[which(dat_comp$nationality=="Australia")] <- "2"
+> dat_comp$nationality[which(dat_comp$nationality=="Austria")] <- "3"
+> dat_comp$nationality[which(dat_comp$nationality=="Brazil")] <- "4"
+> dat_comp$nationality[which(dat_comp$nationality=="Canada")] <- "5"
+> dat_comp$nationality[which(dat_comp$nationality=="Dominican")] <- "6"
+> dat_comp$nationality[which(dat_comp$nationality=="Filipino")] <- "7"
+> dat_comp$nationality[which(dat_comp$nationality=="Finland")] <- "8"
+> dat_comp$nationality[which(dat_comp$nationality=="France")] <- "9"
+> dat_comp$nationality[which(dat_comp$nationality=="Germany")] <- "10"
+> dat_comp$nationality[which(dat_comp$nationality=="Ireland")] <- "11"
+> dat_comp$nationality[which(dat_comp$nationality=="Italy")] <- "12"
+> dat_comp$nationality[which(dat_comp$nationality=="Mexico")] <- "13"
+> dat_comp$nationality[which(dat_comp$nationality=="Northern Ireland")] <- "14"
+> dat_comp$nationality[which(dat_comp$nationality=="Philippines")] <- "15"
+> dat_comp$nationality[which(dat_comp$nationality=="Portugal")] <- "16"
+> dat_comp$nationality[which(dat_comp$nationality=="Russia")] <- "17"
+> dat_comp$nationality[which(dat_comp$nationality=="Serbia")] <- "18"
+> dat_comp$nationality[which(dat_comp$nationality=="Spain")] <- "19"
+> dat_comp$nationality[which(dat_comp$nationality=="Switzerland")] <- "20"
+> dat_comp$nationality[which(dat_comp$nationality=="UK")] <- "21"
+> dat_comp$nationality[which(dat_comp$nationality=="USA")] <- "22"
+> dat_comp$nationality <- as.numeric(dat_comp$nationality)
+> 
+> # Convert 'sport' character strings into integers
+> dat_comp$sport <- as.character(dat_comp$sport)
+> dat_comp$sport[which(dat_comp$sport=="American Football")] <- "1"
+> dat_comp$sport[which(dat_comp$sport=="American Football / Baseball")] <- "2"
+> dat_comp$sport[which(dat_comp$sport=="Auto Racing")] <- "3"
+> dat_comp$sport[which(dat_comp$sport=="Baseball")] <- "4"
+> dat_comp$sport[which(dat_comp$sport=="Basketball")] <- "5"
+> dat_comp$sport[which(dat_comp$sport=="Boxing")] <- "6"
+> dat_comp$sport[which(dat_comp$sport=="Cycling")] <- "7"
+> dat_comp$sport[which(dat_comp$sport=="F1 Motorsports")] <- "8"
+> dat_comp$sport[which(dat_comp$sport=="F1 racing")] <- "9"
+> dat_comp$sport[which(dat_comp$sport=="Golf")] <- "10"
+> dat_comp$sport[which(dat_comp$sport=="Hockey")] <- "11"
+> dat_comp$sport[which(dat_comp$sport=="Ice Hockey")] <- "12"
+> dat_comp$sport[which(dat_comp$sport=="MMA")] <- "13"
+> dat_comp$sport[which(dat_comp$sport=="motorcycle gp")] <- "14"
+> dat_comp$sport[which(dat_comp$sport=="NASCAR")] <- "15"
+> dat_comp$sport[which(dat_comp$sport=="NBA")] <- "16"
+> dat_comp$sport[which(dat_comp$sport=="NFL")] <- "17"
+> dat_comp$sport[which(dat_comp$sport=="Soccer")] <- "18"
+> dat_comp$sport[which(dat_comp$sport=="Tennis")] <- "19"
+> dat_comp$sport <- as.numeric(dat_comp$sport)
+> 
+> ## Correlation analysis: Heat Map
+> dat_comp %>% 
++   dplyr::select(nationality, sport, 
++                 earnings, current_rank) %>%
++   cor() %>%
++   round(3) %>%
++   corrplot(method = "color", addCoef.col="white", type = "upper", 
++            title="Correlation Matrix Among Factors",
++            mar=c(0,0,2,0),
++            tl.cex=0.5, number.cex = 0.4)
+> 
+> ## Scatter plot between related variables
+> x<-dat_comp %>% dplyr::select(nationality, sport, 
++                               earnings, current_rank) %>%
++   cor() 
+> round(x,3)
+             nationality  sport earnings current_rank
+nationality        1.000 -0.255   -0.084        0.072
+sport             -0.255  1.000    0.129       -0.012
+earnings          -0.084  0.129    1.000       -0.449
+current_rank       0.072 -0.012   -0.449        1.000
+> 
+> dat_comp %>% dplyr::select(nationality, sport, earnings, current_rank) %>%
++   scatterplotMatrix()
+> 
+> ### Hypothesis and evaluation
+> 
+> dat_comp %>% dplyr::select(nationality, sport, earnings, current_rank) %>% sapply(quantile)
+     nationality sport earnings current_rank
+0%             1     1      8.1            1
+25%           20     5     24.0            3
+50%           22     6     39.0            5
+75%           22    10     59.4            8
+100%          22    19    300.0           10
+> 
+> dat_new <- dat_comp %>% mutate(p_group=ifelse(nationality>=22, "High", 
++                                               ifelse(nationality<22 & nationality>=20, "Medium", "Low")),
++                                pf_group=ifelse(sport>=10, "High", 
++                                                ifelse(sport<10 & sport>5, "Medium", "Low")),
++                                e_group=ifelse(earnings>=59.4, "High", 
++                                               ifelse(earnings<59.4 & earnings>24.0, "Medium", "Low")),
++                                b_group=ifelse(current_rank>=8, "High", 
++                                               ifelse(current_rank<=8 & current_rank>3, "Medium", "Low")))
+> 
+> # reorder the levels
+> dat_new$p_group <- factor(dat_new$p_group, levels=c("High", "Medium", "Low"))
+> dat_new$pf_group <- factor(dat_new$pf_group, levels=c("High", "Medium", "Low"))
+> dat_new$e_group <- factor(dat_new$e_group, levels=c("High", "Medium", "Low"))
+> dat_new$b_group <- factor(dat_new$b_group, levels=c("High", "Medium", "Low"))
+> 
+> ## count the # for each group
+> 
+> ## nationality:
+> cat("nationality:")
+nationality:> table(dat_new$p_group)
+
+  High Medium    Low 
+   206     25     70 
+> 
+> ## sport:
+> cat("sport:")
+sport:> table(dat_new$pf_group)
+
+  High Medium    Low 
+   118     60    123 
+> 
+> ## earnings:
+> cat("earnings:")
+earnings:> table(dat_new$e_group)
+
+  High Medium    Low 
+    76    148     77 
+> 
+> ## current_rank:
+> cat("current_rank:")
+current_rank:> table(dat_new$b_group)
+
+  High Medium    Low 
+    89    120     92 
+> 
+> ### H1 - Earninigs increases with the particular nationality, particular sport and/or current_rank  
+> # earnings group by nationality
+> x<-dat_new %>% dplyr::select(earnings, p_group) %>%
++   group_by(p_group) %>%
++   summarise(Av_install=round(mean(earnings),3), 
++             SD_install=round(sd(earnings),3),
++             Median_install=round(median(earnings),3))
+`summarise()` ungrouping output (override with `.groups` argument)
+> 
+> # use kable because x is a tibble 
+> kable(x)
+
+
+|p_group | Av_install| SD_install| Median_install|
+|:-------|----------:|----------:|--------------:|
+|High    |     42.652|     34.117|          35.70|
+|Medium  |     48.972|     23.382|          46.00|
+|Low     |     52.711|     34.015|          42.25|
+> 
+> # earnings group by sport
+> x<-dat_new %>% dplyr::select(earnings, pf_group) %>%
++   group_by(pf_group) %>%
++   summarise(Av_install=round(mean(earnings),3), 
++             SD_install=round(sd(earnings),3),
++             Median_install=round(median(earnings),3))
+`summarise()` ungrouping output (override with `.groups` argument)
+> 
+> # use kable because x is a tibble 
+> kable(x)
+
+
+|pf_group | Av_install| SD_install| Median_install|
+|:--------|----------:|----------:|--------------:|
+|High     |     49.614|     31.223|          45.50|
+|Medium   |     49.530|     52.686|          35.75|
+|Low      |     39.628|     20.672|          35.90|
+> 
+> # earnings group by current_rank
+> x<-dat_new %>% dplyr::select(earnings, b_group) %>%
++   group_by(b_group) %>%
++   summarise(Av_install=round(mean(earnings),3), 
++             SD_install=round(sd(earnings),3),
++             Median_install=round(median(earnings),3))
+`summarise()` ungrouping output (override with `.groups` argument)
+> 
+> # use kable because x is a tibble 
+> kable(x)
+
+
+|b_group | Av_install| SD_install| Median_install|
+|:-------|----------:|----------:|--------------:|
+|High    |     31.890|     18.283|           29.0|
+|Medium  |     38.963|     22.489|           34.2|
+|Low     |     67.246|     44.779|           59.2|
+> 
+> 
+> g1 <- dat_new %>% dplyr::select(earnings, p_group) %>% 
++   reshape2::melt(id="p_group") %>%
++   ggplot(aes(x=p_group, y=value, fill=variable))  + 
++   geom_boxplot() +
++   labs(x="nationality", y="earnings", 
++        title="earnings vs nationality") +
++   theme(plot.title=element_text(hjust=0.5), legend.position="None") 
+> 
+> g2 <- dat_new %>% dplyr::select(earnings, pf_group) %>% 
++   reshape2::melt(id="pf_group") %>%
++   ggplot(aes(x=pf_group, y=value, fill=variable))  + 
++   geom_boxplot() +
++   labs(x="sport", y="earnings", 
++        title="earnings vs sport") +
++   theme(plot.title=element_text(hjust=0.5), legend.position="None") 
+> 
+> g3 <- dat_new %>% dplyr::select(earnings, b_group) %>% 
++   reshape2::melt(id="b_group") %>%
++   ggplot(aes(x=b_group, y=value, fill=variable))  + 
++   geom_boxplot() +
++   labs(x="current_rank", y="earnings", 
++        title="earnings vs current_rank") +
++   theme(plot.title=element_text(hjust=0.5), legend.position="None") 
+> 
+> grid.arrange(arrangeGrob(g1, g2,g3, nrow=3))
+> 
+> # earnings group by nationality, sport and current_rank
+> x<- dat_new %>% dplyr::select(earnings, p_group, pf_group, e_group) %>%
++   group_by(p_group, pf_group, e_group) %>%
++   summarise(Av_install=round(mean(earnings),3), 
++             SD_install=round(sd(earnings),3),
++             Median_install=round(median(earnings),3))
+`summarise()` regrouping output by 'p_group', 'pf_group' (override with `.groups` argument)
+> 
+> kable(x)
+
+
+|p_group |pf_group |e_group | Av_install| SD_install| Median_install|
+|:-------|:--------|:-------|----------:|----------:|--------------:|
+|High    |High     |High    |     83.593|     18.320|          79.20|
+|High    |High     |Medium  |     42.238|     10.428|          46.50|
+|High    |High     |Low     |     13.240|      4.223|          12.60|
+|High    |Medium   |High    |    139.357|    105.706|          85.00|
+|High    |Medium   |Medium  |     35.470|      9.253|          32.25|
+|High    |Medium   |Low     |     16.693|      4.765|          15.65|
+|High    |Low      |High    |     73.078|     10.961|          72.30|
+|High    |Low      |Medium  |     38.727|      9.519|          37.50|
+|High    |Low      |Low     |     18.884|      4.726|          21.00|
+|Medium  |High     |High    |     78.171|     15.821|          71.50|
+|Medium  |High     |Medium  |     42.593|      8.168|          43.35|
+|Medium  |Low      |Medium  |     46.000|         NA|          46.00|
+|Medium  |Low      |Low     |     11.600|      2.762|          11.30|
+|Low     |High     |High    |     94.111|     15.803|          94.25|
+|Low     |High     |Medium  |     38.280|      8.021|          37.00|
+|Low     |High     |Low     |     13.600|      3.887|          14.00|
+|Low     |Medium   |High    |     85.429|     34.899|          75.00|
+|Low     |Medium   |Medium  |     40.455|      7.048|          40.00|
+|Low     |Medium   |Low     |     10.200|         NA|          10.20|
+|Low     |Low      |Medium  |     47.667|     12.055|          49.00|
+|Low     |Low      |Low     |     15.545|      4.809|          15.00|
+> 
+> CrossTable(dat_new$p_group, dat_new$pf_group,
++            prop.chisq=FALSE, dnn=c("nationality", "sport"))
+
+ 
+   Cell Contents
+|-------------------------|
+|                       N |
+|           N / Row Total |
+|           N / Col Total |
+|         N / Table Total |
+|-------------------------|
+
+ 
+Total Observations in Table:  301 
+
+ 
+             | sport 
+ nationality |      High |    Medium |       Low | Row Total | 
+-------------|-----------|-----------|-----------|-----------|
+        High |        60 |        41 |       105 |       206 | 
+             |     0.291 |     0.199 |     0.510 |     0.684 | 
+             |     0.508 |     0.683 |     0.854 |           | 
+             |     0.199 |     0.136 |     0.349 |           | 
+-------------|-----------|-----------|-----------|-----------|
+      Medium |        21 |         0 |         4 |        25 | 
+             |     0.840 |     0.000 |     0.160 |     0.083 | 
+             |     0.178 |     0.000 |     0.033 |           | 
+             |     0.070 |     0.000 |     0.013 |           | 
+-------------|-----------|-----------|-----------|-----------|
+         Low |        37 |        19 |        14 |        70 | 
+             |     0.529 |     0.271 |     0.200 |     0.233 | 
+             |     0.314 |     0.317 |     0.114 |           | 
+             |     0.123 |     0.063 |     0.047 |           | 
+-------------|-----------|-----------|-----------|-----------|
+Column Total |       118 |        60 |       123 |       301 | 
+             |     0.392 |     0.199 |     0.409 |           | 
+-------------|-----------|-----------|-----------|-----------|
+
+ 
+> 
+> CrossTable(dat_new$e_group, dat_new$pf_group,
++            prop.chisq=FALSE, dnn=c("current_rank", "sport"))
+
+ 
+   Cell Contents
+|-------------------------|
+|                       N |
+|           N / Row Total |
+|           N / Col Total |
+|         N / Table Total |
+|-------------------------|
+
+ 
+Total Observations in Table:  301 
+
+ 
+             | sport 
+current_rank |      High |    Medium |       Low | Row Total | 
+-------------|-----------|-----------|-----------|-----------|
+        High |        39 |        14 |        23 |        76 | 
+             |     0.513 |     0.184 |     0.303 |     0.252 | 
+             |     0.331 |     0.233 |     0.187 |           | 
+             |     0.130 |     0.047 |     0.076 |           | 
+-------------|-----------|-----------|-----------|-----------|
+      Medium |        50 |        31 |        67 |       148 | 
+             |     0.338 |     0.209 |     0.453 |     0.492 | 
+             |     0.424 |     0.517 |     0.545 |           | 
+             |     0.166 |     0.103 |     0.223 |           | 
+-------------|-----------|-----------|-----------|-----------|
+         Low |        29 |        15 |        33 |        77 | 
+             |     0.377 |     0.195 |     0.429 |     0.256 | 
+             |     0.246 |     0.250 |     0.268 |           | 
+             |     0.096 |     0.050 |     0.110 |           | 
+-------------|-----------|-----------|-----------|-----------|
+Column Total |       118 |        60 |       123 |       301 | 
+             |     0.392 |     0.199 |     0.409 |           | 
+-------------|-----------|-----------|-----------|-----------|
+
+ 
+> 
+> CrossTable(dat_new$p_group, dat_new$e_group,
++            prop.chisq=FALSE, dnn=c("nationality", "current_rank"))
+
+ 
+   Cell Contents
+|-------------------------|
+|                       N |
+|           N / Row Total |
+|           N / Col Total |
+|         N / Table Total |
+|-------------------------|
+
+ 
+Total Observations in Table:  301 
+
+ 
+             | current_rank 
+ nationality |      High |    Medium |       Low | Row Total | 
+-------------|-----------|-----------|-----------|-----------|
+        High |        44 |       104 |        58 |       206 | 
+             |     0.214 |     0.505 |     0.282 |     0.684 | 
+             |     0.579 |     0.703 |     0.753 |           | 
+             |     0.146 |     0.346 |     0.193 |           | 
+-------------|-----------|-----------|-----------|-----------|
+      Medium |         7 |        15 |         3 |        25 | 
+             |     0.280 |     0.600 |     0.120 |     0.083 | 
+             |     0.092 |     0.101 |     0.039 |           | 
+             |     0.023 |     0.050 |     0.010 |           | 
+-------------|-----------|-----------|-----------|-----------|
+         Low |        25 |        29 |        16 |        70 | 
+             |     0.357 |     0.414 |     0.229 |     0.233 | 
+             |     0.329 |     0.196 |     0.208 |           | 
+             |     0.083 |     0.096 |     0.053 |           | 
+-------------|-----------|-----------|-----------|-----------|
+Column Total |        76 |       148 |        77 |       301 | 
+             |     0.252 |     0.492 |     0.256 |           | 
+-------------|-----------|-----------|-----------|-----------|
+
+ 
+> 
+> # create combine group for boxplot
+> x<- dat_new %>% dplyr::select(earnings, p_group, pf_group, e_group) %>% 
++   reshape2::melt(id=c("pf_group", "e_group")) %>%
++   mutate(c_group=ifelse(pf_group=="High", 
++                         ifelse(e_group=="High", "High-High", 
++                                ifelse(e_group=="Medium", "High-Medium", "High-Low")),
++                         ifelse(pf_group=="Medium", 
++                                ifelse(e_group=="High", "Medium-High", 
++                                       ifelse(e_group=="Medium", "Medium-Medium", "Medium-Low")),
++                                ifelse(e_group=="High", "Low-High", 
++                                       ifelse(e_group=="Medium", "Low-Medium", "Low-Low")))))
+Warning message:
+attributes are not identical across measure variables; they will be dropped 
+> 
+> x$c_group <- factor(x$c_group, levels=c("High-High", "High-Medium", "High-Low",
++                                         "Medium-High", "Medium-Medium","Medium-Low",
++                                         "Low-High", "Low-Medium", "Low-Low"))
+> 
+> x %>% filter(variable=="earnings") %>%
++   ggplot(aes(x=c_group, y=value, fill=variable))  + 
++   geom_boxplot() +
++   labs(x="sport + current_rank", y="earnings", 
++        title="earnings vs sport + current_rank") +
++   theme(axis.text.x = element_text(angle = 45, hjust = 1),
++         plot.title=element_text(hjust=0.5), legend.position="None") 
+> 
+> y <- x %>% mutate(i_group=ifelse(value>0, "Yes", "No"))
+> y$i_group <- factor(y$i_group, levels=c("Yes", "No"))
+> CrossTable(y$c_group, y$i_group, 
++            prop.chisq=FALSE, dnn=c("sport-current_rank", "earnings"))
+
+ 
+   Cell Contents
+|-------------------------|
+|                       N |
+|         N / Table Total |
+|-------------------------|
+
+ 
+Total Observations in Table:  602 
+
+ 
+              | y$i_group 
+    y$c_group |       Yes | Row Total | 
+--------------|-----------|-----------|
+    High-High |        78 |        78 | 
+              |     0.130 |           | 
+--------------|-----------|-----------|
+  High-Medium |       100 |       100 | 
+              |     0.166 |           | 
+--------------|-----------|-----------|
+     High-Low |        58 |        58 | 
+              |     0.096 |           | 
+--------------|-----------|-----------|
+  Medium-High |        28 |        28 | 
+              |     0.047 |           | 
+--------------|-----------|-----------|
+Medium-Medium |        62 |        62 | 
+              |     0.103 |           | 
+--------------|-----------|-----------|
+   Medium-Low |        30 |        30 | 
+              |     0.050 |           | 
+--------------|-----------|-----------|
+     Low-High |        46 |        46 | 
+              |     0.076 |           | 
+--------------|-----------|-----------|
+   Low-Medium |       134 |       134 | 
+              |     0.223 |           | 
+--------------|-----------|-----------|
+      Low-Low |        66 |        66 | 
+              |     0.110 |           | 
+--------------|-----------|-----------|
+ Column Total |       602 |       602 | 
+--------------|-----------|-----------|
+
+ 
+> 
