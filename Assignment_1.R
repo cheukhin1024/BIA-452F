@@ -17,7 +17,7 @@ library(ltm)
 
 ### Descriptive statistics
 
-dat <- read_csv("C:/Users/Administrator/Downloads/Forbes Richest Atheletes (1990-2020).csv")
+dat <- read_csv("C:/Users/s1224442/Downloads/Forbes Richest Atheletes (1990-2020).csv")
 describe(dat[,1:5])
 
 ## Fixing the raw data input error
@@ -185,7 +185,7 @@ table(dat_new$e_group)
 cat("current_rank:")
 table(dat_new$b_group)
 
-### H1 - earnings
+### H1 - Earninigs increases with the particular nationality, particular sport and/or current_rank  
 # earnings group by nationality
 x<-dat_new %>% dplyr::select(earnings, p_group) %>%
   group_by(p_group) %>%
@@ -283,4 +283,9 @@ x %>% filter(variable=="earnings") %>%
   labs(x="sport + current_rank", y="earnings", 
        title="earnings vs sport + current_rank") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        plot.title=element_text(hjust=0.5), legend.position="None")
+        plot.title=element_text(hjust=0.5), legend.position="None") 
+
+y <- x %>% mutate(i_group=ifelse(value>0, "Yes", "No"))
+y$i_group <- factor(y$i_group, levels=c("Yes", "No"))
+CrossTable(y$c_group, y$i_group, 
+           prop.chisq=FALSE, dnn=c("sports-current_rank", "earnings"))
