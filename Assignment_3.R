@@ -24,11 +24,18 @@ library(mlbench)
 library(mlr)
 library(rpart)
 library(rpart.plot)
+library(e1071)
+library(glmnet) 
+library(MASS)
+library(yardstick)
+library(gmodels)
+library(scales)
 
 ### Descriptive statistics
 
 dat <- read_csv("C:/Users/Administrator/Downloads/BankChurners.csv")
 describe(dat[,1:23])
+summary(dat)
 head(dat, 10)
 
 # Select all columns (excluding 'CLIENTNUM') to form a dataframe
@@ -116,15 +123,15 @@ dat_comp1<-dat_comp[keeps]
 dim(dat_comp1)
 
 # Convert 'Attrition_Flag' character strings into integers
-dat_comp1$Attrition_Flag <- as.character(dat_comp1$Attrition_Flag)
-dat_comp1$Attrition_Flag[which(dat_comp1$Attrition_Flag=="Attrited Customer")] <- "1"
-dat_comp1$Attrition_Flag[which(dat_comp1$Attrition_Flag=="Existing Customer")] <- "0"
-dat_comp1$Attrition_Flag <- as.numeric(dat_comp1$Attrition_Flag)
-table(dat_comp1$Attrition_Flag)
+#dat_comp1$Attrition_Flag <- as.character(dat_comp1$Attrition_Flag)
+#dat_comp1$Attrition_Flag[which(dat_comp1$Attrition_Flag=="Attrited Customer")] <- "1"
+#dat_comp1$Attrition_Flag[which(dat_comp1$Attrition_Flag=="Existing Customer")] <- "0"
+#dat_comp1$Attrition_Flag <- as.numeric(dat_comp1$Attrition_Flag)
+#table(dat_comp1$Attrition_Flag)
 
-trainIndex <- createDataPartition(dat_comp1$Attrition_Flag, p = .75,list=FALSE)
-training <- dat_comp1[trainIndex,]
-testing <- dat_comp1[-trainIndex,]
+#trainIndex <- createDataPartition(dat_comp1$Attrition_Flag, p = .75,list=FALSE)
+#training <- dat_comp1[trainIndex,]
+#testing <- dat_comp1[-trainIndex,]
 
 #Trial Test
 # Convert 'Attrition_Flag' character strings into integers
@@ -170,113 +177,59 @@ tree.p = predict(mt_prune, testing, type = "class")
 cmt = confusionMatrix(tree.p, as.factor(testing$Attrition_Flag), positive ="1")
 cmt
 
-
-
-
-
-
-
-
-
-
-
-# Convert 'Card_Category' character strings into integers
-dat_comp$Card_Category <- as.character(dat_comp$Card_Category)
-dat_comp$Card_Category[which(dat_comp$Card_Category=="Blue")] <- "0"
-dat_comp$Card_Category[which(dat_comp$Card_Category=="Silver")] <- "1"
-dat_comp$Card_Category[which(dat_comp$Card_Category=="Gold")] <- "2"
-dat_comp$Card_Category[which(dat_comp$Card_Category=="Platinum")] <- "3"
-dat_comp$Card_Category <- as.numeric(dat_comp$Card_Category)
-
-# Convert 'Marital_Status' character strings into integers
-dat_comp$Marital_Status <- as.character(dat_comp$Marital_Status)
-dat_comp$Marital_Status[which(dat_comp$Marital_Status=="Married")] <- "0"
-dat_comp$Marital_Status[which(dat_comp$Marital_Status=="Single")] <- "1"
-dat_comp$Marital_Status[which(dat_comp$Marital_Status=="Unknown")] <- "2"
-dat_comp$Marital_Status[which(dat_comp$Marital_Status=="Divorced")] <- "3"
-dat_comp$Marital_Status <- as.numeric(dat_comp$Marital_Status)
-
+#SVM
 # Convert 'Gender' character strings into integers
-dat_comp$Gender <- as.character(dat_comp$Gender)
-dat_comp$Gender[which(dat_comp$Gender=="F")] <- "0"
-dat_comp$Gender[which(dat_comp$Gender=="M")] <- "1"
-dat_comp$Gender <- as.numeric(dat_comp$Gender)
-
-# Convert 'Income_Category' character strings into integers
-dat_comp$Income_Category <- as.character(dat_comp$Income_Category)
-dat_comp$Income_Category[which(dat_comp$Income_Category=="Unknown")] <- "0"
-dat_comp$Income_Category[which(dat_comp$Income_Category=="Less than $40K")] <- "1"
-dat_comp$Income_Category[which(dat_comp$Income_Category=="$40K - $60K")] <- "2"
-dat_comp$Income_Category[which(dat_comp$Income_Category=="$60K - $80K")] <- "3"
-dat_comp$Income_Category[which(dat_comp$Income_Category=="$80K - $120K")] <- "4"
-dat_comp$Income_Category[which(dat_comp$Income_Category=="$120K +")] <- "5"
-dat_comp$Income_Category <- as.numeric(dat_comp$Income_Category)
+dat_18features$Gender <- as.character(dat_18features$Gender)
+dat_18features$Gender[which(dat_18features$Gender=="F")] <- "0"
+dat_18features$Gender[which(dat_18features$Gender=="M")] <- "1"
+dat_18features$Gender <- as.numeric(dat_18features$Gender)
 
 # Convert 'Education_Level' character strings into integers
-dat_comp$Education_Level <- as.character(dat_comp$Education_Level)
-dat_comp$Education_Level[which(dat_comp$Education_Level=="Unknown")] <- "0"
-dat_comp$Education_Level[which(dat_comp$Education_Level=="Uneducated")] <- "1"
-dat_comp$Education_Level[which(dat_comp$Education_Level=="High School")] <- "2"
-dat_comp$Education_Level[which(dat_comp$Education_Level=="College")] <- "3"
-dat_comp$Education_Level[which(dat_comp$Education_Level=="Graduate")] <- "4"
-dat_comp$Education_Level <- as.numeric(dat_comp$Education_Level)
+dat_18features$Education_Level <- as.character(dat_18features$Education_Level)
+dat_18features$Education_Level[which(dat_18features$Education_Level=="Unknown")] <- "0"
+dat_18features$Education_Level[which(dat_18features$Education_Level=="Uneducated")] <- "1"
+dat_18features$Education_Level[which(dat_18features$Education_Level=="High School")] <- "2"
+dat_18features$Education_Level[which(dat_18features$Education_Level=="College")] <- "3"
+dat_18features$Education_Level[which(dat_18features$Education_Level=="Graduate")] <- "4"
+dat_18features$Education_Level <- as.numeric(dat_18features$Education_Level)
 
-# Show top 10 rows
-head(dat_comp, 10)
+# Convert 'Marital_Status' character strings into integers
+dat_18features$Marital_Status <- as.character(dat_18features$Marital_Status)
+dat_18features$Marital_Status[which(dat_18features$Marital_Status=="Married")] <- "0"
+dat_18features$Marital_Status[which(dat_18features$Marital_Status=="Single")] <- "1"
+dat_18features$Marital_Status[which(dat_18features$Marital_Status=="Unknown")] <- "2"
+dat_18features$Marital_Status[which(dat_18features$Marital_Status=="Divorced")] <- "3"
+dat_18features$Marital_Status <- as.numeric(dat_18features$Marital_Status)
 
-## Correlation analysis of 18 features (all 23 columns but excluding 'CLIENTNUM', Total_Trans_Amt', 'Total_Ct_Chng_Q4', 'Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_1', 'Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_2')between binary variables and continuous variables:
-dat_comp %>% 
-  dplyr::select(Attrition_Flag, Gender, Education_Level, Marital_Status, Income_Category, Card_Category, Customer_Age, Dependent_count, Months_on_book, Total_Relationship_Count, Months_Inactive_12_mon, Contacts_Count_12_mon, Credit_Limit, Total_Revolving_Bal, Avg_Open_To_Buy, Total_Trans_Amt, Total_Trans_Ct, Avg_Utilization_Ratio) %>%
-  cor() %>%
-  round(3) %>%
-  corrplot(method = "color", addCoef.col="white", type = "upper", 
-           title="Correlation Matrix Among Factors",
-           mar=c(0,0,2,0),
-           tl.cex=0.5, number.cex = 0.4)
+# Convert 'Income_Category' character strings into integers
+dat_18features$Income_Category <- as.character(dat_18features$Income_Category)
+dat_18features$Income_Category[which(dat_18features$Income_Category=="Unknown")] <- "0"
+dat_18features$Income_Category[which(dat_18features$Income_Category=="Less than $40K")] <- "1"
+dat_18features$Income_Category[which(dat_18features$Income_Category=="$40K - $60K")] <- "2"
+dat_18features$Income_Category[which(dat_18features$Income_Category=="$60K - $80K")] <- "3"
+dat_18features$Income_Category[which(dat_18features$Income_Category=="$80K - $120K")] <- "4"
+dat_18features$Income_Category[which(dat_18features$Income_Category=="$120K +")] <- "5"
+dat_18features$Income_Category <- as.numeric(dat_18features$Income_Category)
 
-## Scatter plot between related variables
-x<-dat_comp %>% dplyr::select(Attrition_Flag, Gender, Education_Level, Marital_Status, Income_Category, Card_Category, Customer_Age, Dependent_count, Months_on_book, Total_Relationship_Count, Months_Inactive_12_mon, Contacts_Count_12_mon, Credit_Limit, Total_Revolving_Bal, Avg_Open_To_Buy, Total_Trans_Amt, Total_Trans_Ct, Avg_Utilization_Ratio) %>%
-  cor() 
-round(x,3)
+# Convert 'Card_Category' character strings into integers
+dat_18features$Card_Category <- as.character(dat_18features$Card_Category)
+dat_18features$Card_Category[which(dat_18features$Card_Category=="Blue")] <- "0"
+dat_18features$Card_Category[which(dat_18features$Card_Category=="Silver")] <- "1"
+dat_18features$Card_Category[which(dat_18features$Card_Category=="Gold")] <- "2"
+dat_18features$Card_Category[which(dat_18features$Card_Category=="Platinum")] <- "3"
+dat_18features$Card_Category <- as.numeric(dat_18features$Card_Category)
 
-# Form a new dataframe by choosing those 18 features
-dat_features <- dat_comp %>% 
-  dplyr::select(Attrition_Flag, Gender, Education_Level, Marital_Status, Income_Category, Card_Category, Customer_Age, Dependent_count, Months_on_book, Total_Relationship_Count, Months_Inactive_12_mon, Contacts_Count_12_mon, Credit_Limit, Total_Revolving_Bal, Avg_Open_To_Buy, Total_Trans_Amt, Total_Trans_Ct, Avg_Utilization_Ratio)
+# Split training data and testing data for SVM
+trainIndex <- createDataPartition(dat_18features$Total_Trans_Amt, p = .75,list=FALSE)
+training <- dat_18features[trainIndex,]
+testing <- dat_18features[-trainIndex,]
 
-# Show top 10 rows
-head(dat_features, 10)
+# compare the distribution of the training and testing data sets
+CrossTable(training$Attrition_Flag)
+CrossTable(testing$Attrition_Flag)
 
-# calculating the number of cells with na of the new data frame
-dat_features_missingcells = sum(is.na(dat_features))
-print("Missing value cells in dat_features")
-print(dat_features_missingcells)
-which(is.na(dat_features))
-
-#Artificial Neural Networks
-df$Attrition_Flag <- NULL
-df<-normalizeFeatures(dat_comp, method="range")
-summary(df)
-# split data into training and test sets
-set.seed(800)
-index <- 1:nrow(df)
-test_set_index <- sample(index, trunc(length(index)/3))
-test_set <- df[test_set_index,]
-train_set <- df[-test_set_index,]
-
-# create a neural network classification task
-nn_task <- makeClassifTask(id = "nn", data = train_set,
-                           target = "Attrition_Flag")
-nn_task
-# produce summary of the task data
-summary(getTaskData(nn_task))
-# check parameter sets of learner
-getParamSet(makeLearner("classif.nnet"))
-getHyperPars(makeLearner("classif.nnet"))
-# create a neural network learner - 3 neurons
-nn_lrn <- makeLearner("classif.nnet", size=3, maxit=10000L)
-nn_lrn
-# train the neural network classifier
-nn_mod <- train(nn_lrn, nn_task)
-nn_mod$learner.model
-nn_mod$features
-nn_mod$time 
+## SVM
+svmL.fit = svm(Attrition_Flag ~ ., data = training, kernel = "linear")
+svmL_predication = predict(svmL.fit, testing)
+confusionMatrix(svmL_predication, as.factor(testing$Attrition_Flag))
+prediction_matrix['SVML'] = svmL_predication
