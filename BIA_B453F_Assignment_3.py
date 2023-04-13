@@ -22,7 +22,7 @@ display(df)
 
 # COMMAND ----------
 
-# DBTITLE 1,Save the csv data as Delta format in Databricks Delta Data Lake
+# DBTITLE 1,Save the data as Delta format in Databricks Delta Data Lake
 df.write.format("delta").mode("overwrite").option("overwriteSchema","True").saveAsTable('tinder_google_play_reviews_delta')
 
 # COMMAND ----------
@@ -33,7 +33,7 @@ df = spark.sql("SELECT content, \
                        thumbsUpCount \
                 FROM tinder_google_play_reviews_delta \
                 ORDER BY at DESC")
-display(df)                 
+display(df)                                
 
 # COMMAND ----------
 
@@ -56,6 +56,17 @@ display(pd_df)
 
 # DBTITLE 1,Histograms of 'score'
 sns.countplot(pd_df.score)
+
+# COMMAND ----------
+
+# DBTITLE 1,Histograms of 'reviewCreatedVersion'
+temp_df = spark.sql("SELECT reviewCreatedVersion \
+                FROM tinder_google_play_reviews_delta \
+                ORDER BY reviewCreatedVersion DESC").toPandas()
+
+display(temp_df)
+
+sns.countplot(temp_df.reviewCreatedVersion)
 
 # COMMAND ----------
 
@@ -220,6 +231,16 @@ negative_fdist.plot(30,title='Frequency for 30 most common tokens in word cloud 
 
 # COMMAND ----------
 
+# DBTITLE 1,Relationship between 'score' and 'reviewCreatedVersion'
+temp_score_reviewCreatedVersion_df = spark.sql("SELECT score, \
+                                                       reviewCreatedVersion\
+                                                FROM tinder_google_play_reviews_delta \
+                                                ORDER BY at DESC").toPandas()
+
+sns.countplot(temp_score_reviewCreatedVersion_df, x="reviewCreatedVersion", hue="score")
+
+# COMMAND ----------
+
 # DBTITLE 1,Count sentiment
 sum_positive = sum(pd_df["blob_sentiment_polarity"] >= 0.5)
 sum_negative = sum(pd_df["blob_sentiment_polarity"] < 0.5)
@@ -244,7 +265,6 @@ print("Negative: ", sum_negative)
 # COMMAND ----------
 
 # DBTITLE 1,Text Network Analysis
-
 import textnets as tn
 import spacy
 import en_core_web_sm
@@ -256,18 +276,43 @@ pd_fdist = spark.sql("SELECT content \
                         WHERE content like '%fake%' \
                         ORDER BY thumbsUpCount ;").toPandas().head(30)
 
-#tn.params["seed"] = 42
+tn.params["seed"] = 42
 
 corpus = tn.Corpus.from_df(pd_fdist, doc_col="content")
 
 t = tn.Textnet(corpus.tokenized(), min_docs=1)
-#t = tn.Textnet(word for word in word_tokenize(text), min_docs=1)
 
 t.plot(label_nodes=True, show_clusters=True)
 
 # COMMAND ----------
 
-# DBTITLE 1,Text similarity
+# DBTITLE 1,Positive Text similarity
+pd_fdist = spark.sql("SELECT content \
+                        FROM transformed_tinder_google_play_reviews_delta \
+                        WHERE content LIKE '%love%' \
+                        ORDER BY thumbsUpCount;").toPandas().head(30)
+
+display(pd_fdist)
+
+# COMMAND ----------
+
+import spacy
+
+arr_positive_comment_similarity = []
+
+for positive_comment_1 in pd_fdist.content:
+    for positive_comment_2 in pd_fdist.content:
+        positive_comment_similarity = nlp(positive_comment_1).similarity(nlp(positive_comment_2))
+        print(positive_comment_similarity)
+        arr_positive_comment_similarity.append(positive_comment_similarity)
+
+# COMMAND ----------
+
+np.mean(arr_positive_comment_similarity)
+
+# COMMAND ----------
+
+# DBTITLE 1,Negative Text similarity
 import spacy
 
 new_pd_fdist = spark.sql("SELECT content \
@@ -290,6 +335,3 @@ for negative_comment_1 in new_pd_fdist.content:
 # COMMAND ----------
 
 np.mean(arr_negative_comment_similarity)
-
-# COMMAND ----------
-
