@@ -22,7 +22,7 @@ display(df)
 
 # COMMAND ----------
 
-#df.write.format("delta").mode("overwrite").option("overwriteSchema","True").saveAsTable('tinder_google_play_reviews_delta')
+df.write.format("delta").mode("overwrite").option("overwriteSchema","True").saveAsTable('tinder_google_play_reviews_delta')
 
 # COMMAND ----------
 
@@ -289,3 +289,6 @@ for negative_comment_1 in new_pd_fdist.content:
 # COMMAND ----------
 
 np.mean(arr_negative_comment_similarity)
+
+# COMMAND ----------
+
