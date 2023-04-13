@@ -22,6 +22,7 @@ display(df)
 
 # COMMAND ----------
 
+# DBTITLE 1,Save the csv data as Delta format in Databricks Delta Data Lake
 df.write.format("delta").mode("overwrite").option("overwriteSchema","True").saveAsTable('tinder_google_play_reviews_delta')
 
 # COMMAND ----------
