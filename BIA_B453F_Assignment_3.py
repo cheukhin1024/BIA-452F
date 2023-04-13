@@ -97,9 +97,11 @@ plt.show()
 import nltk
 nltk.download('punkt')
 nltk.download('stopwords')
+from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.probability import FreqDist
 import re
+import string 
 
 stemmer=nltk.SnowballStemmer('english')
 stopword=set(stopwords.words('english'))
@@ -123,6 +125,8 @@ pd_df['content']=pd_df['content'].apply(clean)
 # COMMAND ----------
 
 # DBTITLE 1,Overall Word Cloud
+from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
+
 #Creating the text variable
 text = " ".join(cat for cat in pd_df.content)
 
@@ -154,8 +158,8 @@ fdist.plot(30,title='Frequency for 30 most common tokens in overall word cloud')
 # COMMAND ----------
 
 # DBTITLE 1,Word Cloud with positive sentiment
-#Creating the text variable
-positive_text = " ".join(cat for cat in pd_df.content[pd_df["blob_sentiment_polarity"] > 0])
+#Creating the positive text variable
+positive_text = " ".join(cat for cat in pd_df.content[pd_df["blob_sentiment_polarity"] >= 0.5])
 
 #Generate word cloud
 word_cloud = WordCloud(
@@ -176,48 +180,17 @@ plt.show()
 # COMMAND ----------
 
 # DBTITLE 1,Frequency for 30 most common tokens in word cloud with positive sentiment
-fdist = FreqDist()
+positive_fdist = FreqDist()
 for word in word_tokenize(positive_text):
-    fdist[word.lower()] += 1
+    positive_fdist[word.lower()] += 1
     
-fdist.plot(30,title='Frequency for 30 most common tokens in word cloud with positive sentiment')
-
-# COMMAND ----------
-
-# DBTITLE 1,Word Cloud with neutral sentiment
-#Creating the text variable
-neutral_text = " ".join(cat for cat in pd_df.content[pd_df["blob_sentiment_polarity"] == 0])
-
-#Generate word cloud
-word_cloud = WordCloud(
-        width=3000,
-        height=2000,
-        random_state=1,
-        background_color="salmon",
-        colormap="Pastel1",
-        collocations=False,
-        stopwords=STOPWORDS,
-        ).generate(neutral_text)
-
-#Display the generated Word Cloud
-plt.imshow(word_cloud)
-plt.axis("off")
-plt.show()
-
-# COMMAND ----------
-
-# DBTITLE 1,Frequency for 30 most common tokens in word cloud with neutral sentiment
-fdist = FreqDist()
-for word in word_tokenize(neutral_text):
-    fdist[word.lower()] += 1
-    
-fdist.plot(30,title='Frequency for 30 most common tokens in word cloud with neutral sentiment')
+positive_fdist.plot(30,title='Frequency for 30 most common tokens in word cloud with positive sentiment')
 
 # COMMAND ----------
 
 # DBTITLE 1,Word Cloud with negative sentiment
-#Creating the text variable
-negative_text = " ".join(cat for cat in pd_df.content[pd_df["blob_sentiment_polarity"] < 0])
+#Creating the negative text variable
+negative_text = " ".join(cat for cat in pd_df.content[pd_df["blob_sentiment_polarity"] < 0.5])
 
 #Generate word cloud
 word_cloud = WordCloud(
@@ -238,20 +211,81 @@ plt.show()
 # COMMAND ----------
 
 # DBTITLE 1,Frequency for 30 most common tokens in word cloud with negative sentiment
-fdist = FreqDist()
+negative_fdist = FreqDist()
 for word in word_tokenize(negative_text):
-    fdist[word.lower()] += 1
+    negative_fdist[word.lower()] += 1
     
-fdist.plot(30,title='Frequency for 30 most common tokens in word cloud with negative sentiment')
+negative_fdist.plot(30,title='Frequency for 30 most common tokens in word cloud with negative sentiment')
 
 # COMMAND ----------
 
-# DBTITLE 1,Clustering
-"""
-#tfidf vector initililization
-from sklearn.feature_extraction.text import TfidfVectorizer
+# DBTITLE 1,Count sentiment
+sum_positive = sum(pd_df["blob_sentiment_polarity"] >= 0.5)
+sum_negative = sum(pd_df["blob_sentiment_polarity"] < 0.5)
 
-tfidf_vect = TfidfVectorizer()
-tfidf = tfidf_vect.fit_transform(text.values)
-tfidf.shape
-"""
+def sentiment_score(a, b):
+    if (a>b):
+        print("Positive 😊 ")
+    else:
+        print("Negative 😠 ")
+       
+sentiment_score(sum_positive, sum_negative)
+
+print("Positive: ", sum_positive)
+print("Negative: ", sum_negative)
+
+# COMMAND ----------
+
+# DBTITLE 1,Use Bash to download Spacy en_core_web_sm
+# MAGIC %sh
+# MAGIC python -m spacy download en_core_web_sm #Use bashscript to download Spacy en_core_web_sm
+
+# COMMAND ----------
+
+# DBTITLE 1,Text Network Analysis
+
+import textnets as tn
+import spacy
+import en_core_web_sm
+
+nlp = en_core_web_sm.load()
+
+pd_fdist = spark.sql("SELECT content \
+                        FROM transformed_tinder_google_play_reviews_delta \
+                        WHERE content like '%fake%' \
+                        ORDER BY thumbsUpCount ;").toPandas().head(30)
+
+#tn.params["seed"] = 42
+
+corpus = tn.Corpus.from_df(pd_fdist, doc_col="content")
+
+t = tn.Textnet(corpus.tokenized(), min_docs=1)
+#t = tn.Textnet(word for word in word_tokenize(text), min_docs=1)
+
+t.plot(label_nodes=True, show_clusters=True)
+
+# COMMAND ----------
+
+# DBTITLE 1,Text similarity
+import spacy
+
+new_pd_fdist = spark.sql("SELECT content \
+                        FROM transformed_tinder_google_play_reviews_delta \
+                        WHERE content LIKE '%fake%' \
+                        ORDER BY thumbsUpCount;").toPandas().head(30)
+
+display(new_pd_fdist)
+
+# COMMAND ----------
+
+arr_negative_comment_similarity = []
+
+for negative_comment_1 in new_pd_fdist.content:
+    for negative_comment_2 in new_pd_fdist.content:
+        negative_comment_similarity = nlp(negative_comment_1).similarity(nlp(negative_comment_2))
+        print(negative_comment_similarity)
+        arr_negative_comment_similarity.append(negative_comment_similarity)
+
+# COMMAND ----------
+
+np.mean(arr_negative_comment_similarity)
