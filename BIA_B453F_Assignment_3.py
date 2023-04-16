@@ -231,16 +231,6 @@ negative_fdist.plot(30,title='Frequency for 30 most common tokens in word cloud 
 
 # COMMAND ----------
 
-# DBTITLE 1,Relationship between 'score' and 'reviewCreatedVersion'
-temp_score_reviewCreatedVersion_df = spark.sql("SELECT score, \
-                                                       reviewCreatedVersion\
-                                                FROM tinder_google_play_reviews_delta \
-                                                ORDER BY at DESC").toPandas()
-
-sns.countplot(temp_score_reviewCreatedVersion_df, x="reviewCreatedVersion", hue="score")
-
-# COMMAND ----------
-
 # DBTITLE 1,Count sentiment
 sum_positive = sum(pd_df["blob_sentiment_polarity"] >= 0.5)
 sum_negative = sum(pd_df["blob_sentiment_polarity"] < 0.5)
